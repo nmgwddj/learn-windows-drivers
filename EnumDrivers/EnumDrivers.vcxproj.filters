@@ -19,7 +19,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <Inf Include="FirstDriver.inf">
+    <Inf Include="EnumDrivers.inf">
       <Filter>Driver Files</Filter>
     </Inf>
   </ItemGroup>
