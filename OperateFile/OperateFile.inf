@@ -1,0 +1,90 @@
+;
+; OperateFile.inf
+;
+
+[Version]
+Signature="$WINDOWS NT$"
+Class=Sample ; TODO: edit Class
+ClassGuid={78A1C341-4539-11d3-B88D-00C04FAD5171} ; TODO: edit ClassGuid
+Provider=%ManufacturerName%
+CatalogFile=OperateFile.cat
+DriverVer= ; TODO: set DriverVer in stampinf property pages
+
+[DestinationDirs]
+DefaultDestDir = 12
+
+; ================= Class section =====================
+
+[ClassInstall32]
+Addreg=SampleClassReg
+
+[SampleClassReg]
+HKR,,,0,%ClassName%
+HKR,,Icon,,-5
+
+[SourceDisksNames]
+1 = %DiskName%,,,""
+
+[SourceDisksFiles]
+OperateFile.sys  = 1,,
+
+;*****************************************
+; Install Section
+;*****************************************
+
+[Manufacturer]
+%ManufacturerName%=Standard,NT$ARCH$
+
+[Standard.NT$ARCH$]
+%OperateFile.DeviceDesc%=OperateFile_Device, Root\OperateFile ; TODO: edit hw-id
+
+[OperateFile_Device.NT]
+CopyFiles=Drivers_Dir
+
+[Drivers_Dir]
+OperateFile.sys
+
+;-------------- Service installation
+[OperateFile_Device.NT.Services]
+AddService = OperateFile,%SPSVCINST_ASSOCSERVICE%, OperateFile_Service_Inst
+
+; -------------- OperateFile driver install sections
+[OperateFile_Service_Inst]
+DisplayName    = %OperateFile.SVCDESC%
+ServiceType    = 1               ; SERVICE_KERNEL_DRIVER
+StartType      = 3               ; SERVICE_DEMAND_START
+ErrorControl   = 1               ; SERVICE_ERROR_NORMAL
+ServiceBinary  = %12%\OperateFile.sys
+
+;
+;--- OperateFile_Device Coinstaller installation ------
+;
+
+[DestinationDirs]
+OperateFile_Device_CoInstaller_CopyFiles = 11
+
+[OperateFile_Device.NT.CoInstallers]
+AddReg=OperateFile_Device_CoInstaller_AddReg
+CopyFiles=OperateFile_Device_CoInstaller_CopyFiles
+
+[OperateFile_Device_CoInstaller_AddReg]
+HKR,,CoInstallers32,0x00010000, "WdfCoInstaller$KMDFCOINSTALLERVERSION$.dll,WdfCoInstaller"
+
+[OperateFile_Device_CoInstaller_CopyFiles]
+WdfCoInstaller$KMDFCOINSTALLERVERSION$.dll
+
+[SourceDisksFiles]
+WdfCoInstaller$KMDFCOINSTALLERVERSION$.dll=1 ; make sure the number matches with SourceDisksNames
+
+[OperateFile_Device.NT.Wdf]
+KmdfService =  OperateFile, OperateFile_wdfsect
+[OperateFile_wdfsect]
+KmdfLibraryVersion = $KMDFVERSION$
+
+[Strings]
+SPSVCINST_ASSOCSERVICE= 0x00000002
+ManufacturerName="<Your manufacturer name>" ;TODO: Replace with your manufacturer name
+ClassName="Samples" ; TODO: edit ClassName
+DiskName = "OperateFile Installation Disk"
+OperateFile.DeviceDesc = "OperateFile Device"
+OperateFile.SVCDESC = "OperateFile Service"
