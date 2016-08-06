@@ -1,0 +1,90 @@
+;
+; Regedit.inf
+;
+
+[Version]
+Signature="$WINDOWS NT$"
+Class=Sample ; TODO: edit Class
+ClassGuid={78A1C341-4539-11d3-B88D-00C04FAD5171} ; TODO: edit ClassGuid
+Provider=%ManufacturerName%
+CatalogFile=Regedit.cat
+DriverVer= ; TODO: set DriverVer in stampinf property pages
+
+[DestinationDirs]
+DefaultDestDir = 12
+
+; ================= Class section =====================
+
+[ClassInstall32]
+Addreg=SampleClassReg
+
+[SampleClassReg]
+HKR,,,0,%ClassName%
+HKR,,Icon,,-5
+
+[SourceDisksNames]
+1 = %DiskName%,,,""
+
+[SourceDisksFiles]
+Regedit.sys  = 1,,
+
+;*****************************************
+; Install Section
+;*****************************************
+
+[Manufacturer]
+%ManufacturerName%=Standard,NT$ARCH$
+
+[Standard.NT$ARCH$]
+%Regedit.DeviceDesc%=Regedit_Device, Root\Regedit ; TODO: edit hw-id
+
+[Regedit_Device.NT]
+CopyFiles=Drivers_Dir
+
+[Drivers_Dir]
+Regedit.sys
+
+;-------------- Service installation
+[Regedit_Device.NT.Services]
+AddService = Regedit,%SPSVCINST_ASSOCSERVICE%, Regedit_Service_Inst
+
+; -------------- Regedit driver install sections
+[Regedit_Service_Inst]
+DisplayName    = %Regedit.SVCDESC%
+ServiceType    = 1               ; SERVICE_KERNEL_DRIVER
+StartType      = 3               ; SERVICE_DEMAND_START
+ErrorControl   = 1               ; SERVICE_ERROR_NORMAL
+ServiceBinary  = %12%\Regedit.sys
+
+;
+;--- Regedit_Device Coinstaller installation ------
+;
+
+[DestinationDirs]
+Regedit_Device_CoInstaller_CopyFiles = 11
+
+[Regedit_Device.NT.CoInstallers]
+AddReg=Regedit_Device_CoInstaller_AddReg
+CopyFiles=Regedit_Device_CoInstaller_CopyFiles
+
+[Regedit_Device_CoInstaller_AddReg]
+HKR,,CoInstallers32,0x00010000, "WdfCoInstaller$KMDFCOINSTALLERVERSION$.dll,WdfCoInstaller"
+
+[Regedit_Device_CoInstaller_CopyFiles]
+WdfCoInstaller$KMDFCOINSTALLERVERSION$.dll
+
+[SourceDisksFiles]
+WdfCoInstaller$KMDFCOINSTALLERVERSION$.dll=1 ; make sure the number matches with SourceDisksNames
+
+[Regedit_Device.NT.Wdf]
+KmdfService =  Regedit, Regedit_wdfsect
+[Regedit_wdfsect]
+KmdfLibraryVersion = $KMDFVERSION$
+
+[Strings]
+SPSVCINST_ASSOCSERVICE= 0x00000002
+ManufacturerName="<Your manufacturer name>" ;TODO: Replace with your manufacturer name
+ClassName="Samples" ; TODO: edit ClassName
+DiskName = "Regedit Installation Disk"
+Regedit.DeviceDesc = "Regedit Device"
+Regedit.SVCDESC = "Regedit Service"
