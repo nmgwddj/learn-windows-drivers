@@ -1,0 +1,90 @@
+;
+; ProcessOperation.inf
+;
+
+[Version]
+Signature="$WINDOWS NT$"
+Class=Sample ; TODO: edit Class
+ClassGuid={78A1C341-4539-11d3-B88D-00C04FAD5171} ; TODO: edit ClassGuid
+Provider=%ManufacturerName%
+CatalogFile=ProcessOperation.cat
+DriverVer= ; TODO: set DriverVer in stampinf property pages
+
+[DestinationDirs]
+DefaultDestDir = 12
+
+; ================= Class section =====================
+
+[ClassInstall32]
+Addreg=SampleClassReg
+
+[SampleClassReg]
+HKR,,,0,%ClassName%
+HKR,,Icon,,-5
+
+[SourceDisksNames]
+1 = %DiskName%,,,""
+
+[SourceDisksFiles]
+ProcessOperation.sys  = 1,,
+
+;*****************************************
+; Install Section
+;*****************************************
+
+[Manufacturer]
+%ManufacturerName%=Standard,NT$ARCH$
+
+[Standard.NT$ARCH$]
+%ProcessOperation.DeviceDesc%=ProcessOperation_Device, Root\ProcessOperation ; TODO: edit hw-id
+
+[ProcessOperation_Device.NT]
+CopyFiles=Drivers_Dir
+
+[Drivers_Dir]
+ProcessOperation.sys
+
+;-------------- Service installation
+[ProcessOperation_Device.NT.Services]
+AddService = ProcessOperation,%SPSVCINST_ASSOCSERVICE%, ProcessOperation_Service_Inst
+
+; -------------- ProcessOperation driver install sections
+[ProcessOperation_Service_Inst]
+DisplayName    = %ProcessOperation.SVCDESC%
+ServiceType    = 1               ; SERVICE_KERNEL_DRIVER
+StartType      = 3               ; SERVICE_DEMAND_START
+ErrorControl   = 1               ; SERVICE_ERROR_NORMAL
+ServiceBinary  = %12%\ProcessOperation.sys
+
+;
+;--- ProcessOperation_Device Coinstaller installation ------
+;
+
+[DestinationDirs]
+ProcessOperation_Device_CoInstaller_CopyFiles = 11
+
+[ProcessOperation_Device.NT.CoInstallers]
+AddReg=ProcessOperation_Device_CoInstaller_AddReg
+CopyFiles=ProcessOperation_Device_CoInstaller_CopyFiles
+
+[ProcessOperation_Device_CoInstaller_AddReg]
+HKR,,CoInstallers32,0x00010000, "WdfCoInstaller$KMDFCOINSTALLERVERSION$.dll,WdfCoInstaller"
+
+[ProcessOperation_Device_CoInstaller_CopyFiles]
+WdfCoInstaller$KMDFCOINSTALLERVERSION$.dll
+
+[SourceDisksFiles]
+WdfCoInstaller$KMDFCOINSTALLERVERSION$.dll=1 ; make sure the number matches with SourceDisksNames
+
+[ProcessOperation_Device.NT.Wdf]
+KmdfService =  ProcessOperation, ProcessOperation_wdfsect
+[ProcessOperation_wdfsect]
+KmdfLibraryVersion = $KMDFVERSION$
+
+[Strings]
+SPSVCINST_ASSOCSERVICE= 0x00000002
+ManufacturerName="<Your manufacturer name>" ;TODO: Replace with your manufacturer name
+ClassName="Samples" ; TODO: edit ClassName
+DiskName = "ProcessOperation Installation Disk"
+ProcessOperation.DeviceDesc = "ProcessOperation Device"
+ProcessOperation.SVCDESC = "ProcessOperation Service"
