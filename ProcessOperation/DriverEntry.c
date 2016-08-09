@@ -24,6 +24,50 @@ VOID ZwKillProcess(HANDLE hPid)
 	}
 }
 
+PETHREAD LookupThread(HANDLE Tid)
+{
+	PETHREAD ethread;
+	if (NT_SUCCESS(PsLookupThreadByThreadId(Tid, &ethread)))
+	{
+		return ethread;
+	}
+	else
+	{
+		return NULL;
+	}
+}
+
+VOID EnumThread(PEPROCESS Process)
+{
+	ULONG			i = 0;
+	ULONG			c = 0;
+	PETHREAD		ethread = NULL;
+	PEPROCESS		eprocess = NULL;
+
+	for (i = 4; i < 262144; i += 4)
+	{
+		ethread = LookupThread((HANDLE)i);
+		if (ethread != NULL)
+		{
+			// 获取进程所属线程
+			eprocess = IoThreadToProcess(ethread);
+			if (eprocess)
+			{
+				UCHAR *ucProcessName = PsGetProcessImageFileName(eprocess);
+				HANDLE PsGetThreadId();
+				if (strcmp("notepad.exe", ucProcessName) == 0)
+				{
+					KdPrint(("\tETHREAD = %p, TID = %ld",
+						ethread,
+						(UINT64)PsGetThreadId(ethread)));
+				}
+			}
+			ObDereferenceObject(ethread);
+		}
+	}
+
+}
+
 PEPROCESS LookupProcess(HANDLE Pid)
 {
 	PEPROCESS eprocess = NULL;
@@ -31,7 +75,7 @@ PEPROCESS LookupProcess(HANDLE Pid)
 	{
 		return eprocess;
 	}
-	
+
 	return NULL;
 }
 
@@ -54,6 +98,9 @@ VOID EnumProcess()
 				ucProcessName);
 			if (strcmp(ucProcessName, "notepad.exe") == 0)
 			{
+				// 枚举线程
+				EnumThread(eproc);
+				// 结束进程
 				ZwKillProcess(hPid);
 			}
 		}
@@ -70,6 +117,7 @@ NTSTATUS DriverEntry(IN PDRIVER_OBJECT pDriverObject, IN PUNICODE_STRING pRegist
 {
 	pDriverObject->DriverUnload = DriverUnload;
 	KdPrint(("[MemoryOperation] Load..."));
+	// 枚举进程
 	EnumProcess();
 	return STATUS_SUCCESS;
 }

@@ -134,9 +134,11 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
     <DebuggerFlavor>DbgengKernelDebugger</DebuggerFlavor>
+    <EnableInf2cat>false</EnableInf2cat>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
     <DebuggerFlavor>DbgengKernelDebugger</DebuggerFlavor>
+    <EnableInf2cat>false</EnableInf2cat>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
     <DebuggerFlavor>DbgengKernelDebugger</DebuggerFlavor>
