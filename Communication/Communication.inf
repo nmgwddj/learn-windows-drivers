@@ -1,0 +1,90 @@
+;
+; Communication.inf
+;
+
+[Version]
+Signature="$WINDOWS NT$"
+Class=Sample ; TODO: edit Class
+ClassGuid={78A1C341-4539-11d3-B88D-00C04FAD5171} ; TODO: edit ClassGuid
+Provider=%ManufacturerName%
+CatalogFile=Communication.cat
+DriverVer= ; TODO: set DriverVer in stampinf property pages
+
+[DestinationDirs]
+DefaultDestDir = 12
+
+; ================= Class section =====================
+
+[ClassInstall32]
+Addreg=SampleClassReg
+
+[SampleClassReg]
+HKR,,,0,%ClassName%
+HKR,,Icon,,-5
+
+[SourceDisksNames]
+1 = %DiskName%,,,""
+
+[SourceDisksFiles]
+Communication.sys  = 1,,
+
+;*****************************************
+; Install Section
+;*****************************************
+
+[Manufacturer]
+%ManufacturerName%=Standard,NT$ARCH$
+
+[Standard.NT$ARCH$]
+%Communication.DeviceDesc%=Communication_Device, Root\Communication ; TODO: edit hw-id
+
+[Communication_Device.NT]
+CopyFiles=Drivers_Dir
+
+[Drivers_Dir]
+Communication.sys
+
+;-------------- Service installation
+[Communication_Device.NT.Services]
+AddService = Communication,%SPSVCINST_ASSOCSERVICE%, Communication_Service_Inst
+
+; -------------- Communication driver install sections
+[Communication_Service_Inst]
+DisplayName    = %Communication.SVCDESC%
+ServiceType    = 1               ; SERVICE_KERNEL_DRIVER
+StartType      = 3               ; SERVICE_DEMAND_START
+ErrorControl   = 1               ; SERVICE_ERROR_NORMAL
+ServiceBinary  = %12%\Communication.sys
+
+;
+;--- Communication_Device Coinstaller installation ------
+;
+
+[DestinationDirs]
+Communication_Device_CoInstaller_CopyFiles = 11
+
+[Communication_Device.NT.CoInstallers]
+AddReg=Communication_Device_CoInstaller_AddReg
+CopyFiles=Communication_Device_CoInstaller_CopyFiles
+
+[Communication_Device_CoInstaller_AddReg]
+HKR,,CoInstallers32,0x00010000, "WdfCoInstaller$KMDFCOINSTALLERVERSION$.dll,WdfCoInstaller"
+
+[Communication_Device_CoInstaller_CopyFiles]
+WdfCoInstaller$KMDFCOINSTALLERVERSION$.dll
+
+[SourceDisksFiles]
+WdfCoInstaller$KMDFCOINSTALLERVERSION$.dll=1 ; make sure the number matches with SourceDisksNames
+
+[Communication_Device.NT.Wdf]
+KmdfService =  Communication, Communication_wdfsect
+[Communication_wdfsect]
+KmdfLibraryVersion = $KMDFVERSION$
+
+[Strings]
+SPSVCINST_ASSOCSERVICE= 0x00000002
+ManufacturerName="<Your manufacturer name>" ;TODO: Replace with your manufacturer name
+ClassName="Samples" ; TODO: edit ClassName
+DiskName = "Communication Installation Disk"
+Communication.DeviceDesc = "Communication Device"
+Communication.SVCDESC = "Communication Service"
