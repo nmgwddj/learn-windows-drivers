@@ -176,7 +176,8 @@ VOID HookSSDT()
 	ServiceTableBase[0x52] = GetOffsetAddress64((ULONGLONG)KeBugCheckEx);
 	PageProtectOn(irql);
 	KdPrint(("KeBugCheckEx: %llx", (ULONGLONG)KeBugCheckEx));
-	KdPrint(("New_NtTerminateProcess: %llx", GetSSDTFunctionAddress64(0x52)));
+	KdPrint(("New_NtTerminateProcess: %llx", GetSSDTFunctionAddress64(0x52)));
+
 }
 
 VOID UnhookSSDT()

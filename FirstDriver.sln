@@ -23,6 +23,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Communication", "Communicat
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestCommunication", "TestCommunication\TestCommunication.vcxproj", "{EA623819-210C-446E-B4E6-B4A794D5FE7A}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{9055239E-8432-4641-80E4-B78C6031352F}"
+	ProjectSection(SolutionItems) = preProject
+		Common\NtStructDef.h = Common\NtStructDef.h
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|ARM = Debug|ARM

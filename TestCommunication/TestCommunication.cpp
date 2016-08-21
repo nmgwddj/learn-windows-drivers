@@ -2,59 +2,50 @@
 //
 
 #include "stdafx.h"
+#include "NtStructDef.h"
 
 #define SYMBOLIC_NAME _T("\\??\\Communication")
 
-// 从应用层给驱动发送一个字符串。
-#define  CWK_DVC_SEND_STR \
-	(ULONG)CTL_CODE( \
-	FILE_DEVICE_UNKNOWN, \
-	0x911,METHOD_BUFFERED, \
-	FILE_WRITE_DATA)
-
-// 从驱动读取一个字符串
-#define  CWK_DVC_RECV_STR \
-	(ULONG)CTL_CODE( \
-	FILE_DEVICE_UNKNOWN, \
-	0x912,METHOD_BUFFERED, \
-	FILE_READ_DATA)
-
 int _tmain(int argc, _TCHAR* argv[])
 {
+	HANDLE		hStdHandle;
 	HANDLE		hDevice = NULL;
-	CHAR		szBuffer[] = "Hello my first driver..";
-	CHAR		szRecvBuffer[512] = { 0 };
 	ULONG		ulResult = 0;
 	BOOL		bRet = FALSE;
 
+	// 设置控制台窗口大小，方便查看
+	hStdHandle = GetStdHandle(STD_OUTPUT_HANDLE);
+	SMALL_RECT rc = { 0, 0, 120 - 1, 25 - 1 };  
+	SetConsoleWindowInfo(hStdHandle, TRUE, &rc);
+
+	// 打开驱动设备
 	hDevice = CreateFile(SYMBOLIC_NAME, GENERIC_READ | GENERIC_WRITE, 0, 0, OPEN_EXISTING, FILE_ATTRIBUTE_SYSTEM, 0);
 	if (hDevice == INVALID_HANDLE_VALUE)
 	{
 		printf("Failed to Open device.\r\n");
 		return -1;
 	}
-	else
-	{
-		printf("Open device successfully.\r\n");
-	}
 
-	bRet = DeviceIoControl(hDevice, CWK_DVC_SEND_STR, szBuffer, (DWORD)strlen(szBuffer) + 1, NULL, 0, &ulResult, 0);
-	if (bRet)
+	// Receive message from driver
+	PROCESSINFO stProcessInfo;
+	while (TRUE)
 	{
-		printf("Send message successfully.\r\n");
-	}
-
-	system("PAUSE");
-
-	bRet = DeviceIoControl(hDevice, CWK_DVC_RECV_STR, NULL, 0, szRecvBuffer, 512, &ulResult, 0);
-	if (bRet)
-	{
-		printf("Recv message successfully. The result content = %s\r\n", szRecvBuffer);
+		memset(&stProcessInfo, 0, sizeof(PROCESSINFO));
+		bRet = DeviceIoControl(hDevice, CWK_DVC_RECV_STR, NULL, 0, &stProcessInfo, sizeof(stProcessInfo), &ulResult, 0);
+		if (bRet)
+		{
+			// 打印数据，wsProcessCommandLine 也是一个参数，如果需要可以自己放开，格式化字符串中增加一个 %ws
+			printf("PPID = %ld, PID = %ld, %ws\r\n",
+				stProcessInfo.hParentId,
+				stProcessInfo.hProcessId,
+				stProcessInfo.wsProcessPath/*,
+				stProcessInfo.wsProcessCommandLine*/);
+		}
 	}
 
 	CloseHandle(hDevice);
-
 	system("PAUSE");
+
     return 0;
 }
 
