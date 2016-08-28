@@ -68,8 +68,8 @@ NTSTATUS RegistryCallback(
 	_In_opt_  PVOID Argument2
 )
 {
-	ULONG				ulCallbackCtx;
 	NTSTATUS			status = STATUS_SUCCESS;
+	ULONG				ulCallbackCtx;
 	REG_NOTIFY_CLASS	ulType = (REG_NOTIFY_CLASS)(ULONG_PTR)Argument1;
 	UNICODE_STRING		usRegisterPath = { 0 };
 	BOOLEAN				bSuccess = FALSE;
@@ -93,7 +93,10 @@ NTSTATUS RegistryCallback(
 				&usRegisterPath, 
 				((PREG_CREATE_KEY_INFORMATION)Argument2)->CompleteName, 
 				((PREG_CREATE_KEY_INFORMATION)Argument2)->RootObject);
-			KdPrint(("[RegNtPreCreateKeyEx] %wZ\r\n", &usRegisterPath));
+			if (bSuccess)
+			{
+				KdPrint(("[RegNtPreCreateKeyEx] %wZ\r\n", &usRegisterPath));
+			}
 		}
 		break;
 	case RegNtPreDeleteKey:
@@ -102,7 +105,10 @@ NTSTATUS RegistryCallback(
 				&usRegisterPath, 
 				NULL, 
 				((PREG_DELETE_KEY_INFORMATION)Argument2)->Object);
-			KdPrint(("[RegNtPreDeleteKey]: %wZ\r\n", &usRegisterPath));
+			if (bSuccess)
+			{
+				KdPrint(("[RegNtPreDeleteKey]: %wZ\r\n", &usRegisterPath));
+			}
 		}
 		break;
 	}
