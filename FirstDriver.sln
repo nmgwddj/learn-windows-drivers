@@ -28,6 +28,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{905523
 		Common\NtStructDef.h = Common\NtStructDef.h
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RegsiterMonitor", "RegsiterMonitor\RegsiterMonitor.vcxproj", "{9A5ED24C-CEEA-4C25-ADFB-8EB24110BA29}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|ARM = Debug|ARM
@@ -252,6 +254,30 @@ Global
 		{EA623819-210C-446E-B4E6-B4A794D5FE7A}.Release|x64.Build.0 = Release|x64
 		{EA623819-210C-446E-B4E6-B4A794D5FE7A}.Release|x86.ActiveCfg = Release|Win32
 		{EA623819-210C-446E-B4E6-B4A794D5FE7A}.Release|x86.Build.0 = Release|Win32
+		{9A5ED24C-CEEA-4C25-ADFB-8EB24110BA29}.Debug|ARM.ActiveCfg = Debug|ARM
+		{9A5ED24C-CEEA-4C25-ADFB-8EB24110BA29}.Debug|ARM.Build.0 = Debug|ARM
+		{9A5ED24C-CEEA-4C25-ADFB-8EB24110BA29}.Debug|ARM.Deploy.0 = Debug|ARM
+		{9A5ED24C-CEEA-4C25-ADFB-8EB24110BA29}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{9A5ED24C-CEEA-4C25-ADFB-8EB24110BA29}.Debug|ARM64.Build.0 = Debug|ARM64
+		{9A5ED24C-CEEA-4C25-ADFB-8EB24110BA29}.Debug|ARM64.Deploy.0 = Debug|ARM64
+		{9A5ED24C-CEEA-4C25-ADFB-8EB24110BA29}.Debug|x64.ActiveCfg = Debug|x64
+		{9A5ED24C-CEEA-4C25-ADFB-8EB24110BA29}.Debug|x64.Build.0 = Debug|x64
+		{9A5ED24C-CEEA-4C25-ADFB-8EB24110BA29}.Debug|x64.Deploy.0 = Debug|x64
+		{9A5ED24C-CEEA-4C25-ADFB-8EB24110BA29}.Debug|x86.ActiveCfg = Debug|Win32
+		{9A5ED24C-CEEA-4C25-ADFB-8EB24110BA29}.Debug|x86.Build.0 = Debug|Win32
+		{9A5ED24C-CEEA-4C25-ADFB-8EB24110BA29}.Debug|x86.Deploy.0 = Debug|Win32
+		{9A5ED24C-CEEA-4C25-ADFB-8EB24110BA29}.Release|ARM.ActiveCfg = Release|ARM
+		{9A5ED24C-CEEA-4C25-ADFB-8EB24110BA29}.Release|ARM.Build.0 = Release|ARM
+		{9A5ED24C-CEEA-4C25-ADFB-8EB24110BA29}.Release|ARM.Deploy.0 = Release|ARM
+		{9A5ED24C-CEEA-4C25-ADFB-8EB24110BA29}.Release|ARM64.ActiveCfg = Release|ARM64
+		{9A5ED24C-CEEA-4C25-ADFB-8EB24110BA29}.Release|ARM64.Build.0 = Release|ARM64
+		{9A5ED24C-CEEA-4C25-ADFB-8EB24110BA29}.Release|ARM64.Deploy.0 = Release|ARM64
+		{9A5ED24C-CEEA-4C25-ADFB-8EB24110BA29}.Release|x64.ActiveCfg = Release|x64
+		{9A5ED24C-CEEA-4C25-ADFB-8EB24110BA29}.Release|x64.Build.0 = Release|x64
+		{9A5ED24C-CEEA-4C25-ADFB-8EB24110BA29}.Release|x64.Deploy.0 = Release|x64
+		{9A5ED24C-CEEA-4C25-ADFB-8EB24110BA29}.Release|x86.ActiveCfg = Release|Win32
+		{9A5ED24C-CEEA-4C25-ADFB-8EB24110BA29}.Release|x86.Build.0 = Release|Win32
+		{9A5ED24C-CEEA-4C25-ADFB-8EB24110BA29}.Release|x86.Deploy.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
