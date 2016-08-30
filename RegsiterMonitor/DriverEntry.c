@@ -2,6 +2,8 @@
 #include <Ntstrsafe.h>
 #include "NtStructDef.h"
 
+#define REG_CREATE_KEY_V1 1
+
 LARGE_INTEGER g_Cookie;
 
 BOOLEAN GetRegistryObjectCompleteName(
@@ -73,6 +75,7 @@ NTSTATUS RegistryCallback(
 	REG_NOTIFY_CLASS	ulType = (REG_NOTIFY_CLASS)(ULONG_PTR)Argument1;
 	UNICODE_STRING		usRegisterPath = { 0 };
 	BOOLEAN				bSuccess = FALSE;
+	BOOLEAN				bEqual = FALSE;
 
 	ulCallbackCtx = (ULONG)(ULONG_PTR)CallbackContext;
 
@@ -81,7 +84,7 @@ NTSTATUS RegistryCallback(
 	usRegisterPath.Buffer = ExAllocatePoolWithTag(NonPagedPool, usRegisterPath.MaximumLength, MEM_TAG);
 	if (NULL == usRegisterPath.Buffer)
 	{
-		KdPrint(("[RegNtPreCreateKey] Failed to call ExAllocPollWithTag.\r\n"));
+		KdPrint(("[RegistryCallback] Failed to call ExAllocPollWithTag.\r\n"));
 		return STATUS_SUCCESS;
 	}
 
@@ -89,13 +92,35 @@ NTSTATUS RegistryCallback(
 	{
 	case RegNtPreCreateKeyEx:
 		{
+			PREG_CREATE_KEY_INFORMATION_V1	pCreateInfo = (PREG_CREATE_KEY_INFORMATION_V1)Argument2;
+			UNICODE_STRING					usFilters = { 0 };
+			WCHAR							*wzFilters[] =
+			{
+				L"\\REGISTRY\\MACHINE\\SYSTEM\\ControlSet001\\Control\\DeviceClasses",
+				L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\DeviceClasses",
+				L"\\REGISTRY\\MACHINE\\SYSTEM\\ControlSet001\\Services\\Tcpip\\Parameters",
+				L"\\REGISTRY\\MACHINE\\System\\CurrentControlSet\\Services\\Tcpip\\Parameters"
+			};
+
 			bSuccess = GetRegistryObjectCompleteName(
-				&usRegisterPath, 
-				((PREG_CREATE_KEY_INFORMATION)Argument2)->CompleteName, 
-				((PREG_CREATE_KEY_INFORMATION)Argument2)->RootObject);
+				&usRegisterPath,
+				pCreateInfo->CompleteName,
+				pCreateInfo->RootObject);
+			
 			if (bSuccess)
 			{
-				KdPrint(("[RegNtPreCreateKeyEx] %wZ\r\n", &usRegisterPath));
+				for (size_t nCount = 0; nCount < sizeof(wzFilters) / sizeof(ULONG_PTR); nCount++)
+				{
+					RtlInitUnicodeString(&usFilters, wzFilters[nCount]);
+					if (RtlEqualUnicodeString(&usRegisterPath, &usFilters, TRUE))
+					{
+						bEqual = TRUE;
+					}
+				}
+				if (!bEqual)
+				{
+					KdPrint(("[RegNtPreCreateKeyEx] %wZ\r\n", &usRegisterPath));
+				}
 			}
 		}
 		break;
@@ -111,6 +136,46 @@ NTSTATUS RegistryCallback(
 			}
 		}
 		break;
+	case RegNtPreSetValueKey:
+		{
+			PREG_SET_VALUE_KEY_INFORMATION	pSetKeyValue = (PREG_SET_VALUE_KEY_INFORMATION)Argument2;
+			UNICODE_STRING					usData = { 0 };
+
+			bSuccess = GetRegistryObjectCompleteName(
+				&usRegisterPath,
+				NULL,
+				pSetKeyValue->Object);
+			if (bSuccess && pSetKeyValue->ValueName->Length > 0 && REG_SZ == pSetKeyValue->Type)
+			{
+				RtlUnicodeStringCatString(&usRegisterPath, L"\\");
+				RtlUnicodeStringCat(&usRegisterPath, pSetKeyValue->ValueName);
+
+				// Data 是以 \0 为结尾的字符串，- sizoef(WCHAR) 是为了不复制 \0
+				usData.Buffer = ExAllocatePoolWithTag(NonPagedPool, pSetKeyValue->DataSize - sizeof(WCHAR), MEM_TAG);
+				usData.Length = (USHORT)pSetKeyValue->DataSize - sizeof(WCHAR);
+				usData.MaximumLength = MAX_STRING_LENGTH;
+
+				RtlCopyMemory(usData.Buffer, pSetKeyValue->Data, pSetKeyValue->DataSize - sizeof(WCHAR));
+
+				KdPrint(("[RegNtPreSetValueKey]: %wZ, Data = %wZ\r\n", &usRegisterPath, &usData));
+
+				ExFreePoolWithTag(usData.Buffer, MEM_TAG);
+			}
+		}
+		break;
+	case RegNtPreDeleteValueKey:
+		// REG_DELETE_VALUE_KEY_INFORMATION
+		break;
+	case RegNtPreSetInformationKey:
+		// REG_SET_INFORMATION_KEY_INFORMATION
+		break;
+	case RegNtPreRenameKey:
+		// REG_RENAME_KEY_INFORMATION
+		break;
+	case RegNtPreSetKeySecurity:
+		// REG_SET_KEY_SECURITY_INFORMATION
+		break;
+
 	}
 
 	if (NULL != usRegisterPath.Buffer)
