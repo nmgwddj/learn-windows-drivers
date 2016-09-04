@@ -2,11 +2,30 @@
 //
 
 #include "stdafx.h"
-#include "NtStructDef.h"
-
-#define SYMBOLIC_NAME _T("\\??\\Communication")
+#include "RegistryMonitor.h"
 
 int _tmain(int argc, _TCHAR* argv[])
+{
+	locale loc("chs");
+	wcout.imbue(loc);
+
+	CRegistryMonitor RegistryMonitorObj;
+
+	if (RegistryMonitorObj.Run())
+	{
+		system("PAUSE");
+		RegistryMonitorObj.Stop();
+	}
+	else
+	{
+		cout << "Failed to open device.." << endl;
+		system("PAUSE");
+	}
+
+	return 0;
+}
+
+int _tmain1(int argc, _TCHAR* argv[])
 {
 	HANDLE		hStdHandle;
 	HANDLE		hDevice = NULL;
@@ -19,7 +38,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	SetConsoleWindowInfo(hStdHandle, TRUE, &rc);
 
 	// 打开驱动设备
-	hDevice = CreateFile(SYMBOLIC_NAME, GENERIC_READ | GENERIC_WRITE, 0, 0, OPEN_EXISTING, FILE_ATTRIBUTE_SYSTEM, 0);
+	hDevice = CreateFile(L"SYMBOLIC_NAME", GENERIC_READ | GENERIC_WRITE, 0, 0, OPEN_EXISTING, FILE_ATTRIBUTE_SYSTEM, 0);
 	if (hDevice == INVALID_HANDLE_VALUE)
 	{
 		printf("Failed to Open device.\r\n");
@@ -35,11 +54,11 @@ int _tmain(int argc, _TCHAR* argv[])
 		if (bRet)
 		{
 			// 打印数据，wsProcessCommandLine 也是一个参数，如果需要可以自己放开，格式化字符串中增加一个 %ws
-			printf("PPID = %ld, PID = %ld, %ws\r\n",
-				stProcessInfo.hParentId,
-				stProcessInfo.hProcessId,
-				stProcessInfo.wsProcessPath/*,
-				stProcessInfo.wsProcessCommandLine*/);
+			//printf("PPID = %ld, PID = %ld, %ws\r\n",
+			//	stProcessInfo.hParentId,
+			//	stProcessInfo.hProcessId,
+			//	stProcessInfo.wsProcessPath/*,
+			//	stProcessInfo.wsProcessCommandLine*/);
 		}
 	}
 

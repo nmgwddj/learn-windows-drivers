@@ -1,5 +1,4 @@
 #pragma once
-#include <ntifs.h>
 
 typedef struct _CONTROL_AREA64
 {
