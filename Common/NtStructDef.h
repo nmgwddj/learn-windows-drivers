@@ -22,6 +22,20 @@
 	FILE_READ_DATA)
 
 #ifndef _NTIFS_
+
+typedef unsigned short WORD;
+
+typedef struct _TIME_FIELDS {
+	WORD wYear;
+	WORD wMonth;
+	WORD wDay;
+	WORD wHour;
+	WORD wMinute;
+	WORD wSecond;
+	WORD wMilliseconds;
+	WORD wWeekday;
+} TIME_FIELDS;
+
 typedef enum _REG_NOTIFY_CLASS {
 	RegNtDeleteKey,
 	RegNtPreDeleteKey = RegNtDeleteKey,
@@ -103,6 +117,8 @@ typedef enum _REG_NOTIFY_CLASS {
 } REG_NOTIFY_CLASS;
 #endif
 
+
+
 typedef struct _PROCESSINFO
 {
 	HANDLE	hParentId;
@@ -114,6 +130,7 @@ typedef struct _PROCESSINFO
 typedef struct _REGISTRY_EVENT
 {
 	HANDLE				hProcessId;					// 操作注册表的进程
+	TIME_FIELDS			time;						// 操作时间
 	REG_NOTIFY_CLASS	enRegistryNotifyClass;		// 操作的类型，新建、删除、修改等
 	ULONG				ulProcessPathLength;		// 操作注册表进程的路径长度
 	ULONG				ulRegistryPathLength;		// 操作的注册表路径长度

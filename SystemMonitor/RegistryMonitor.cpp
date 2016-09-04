@@ -1,6 +1,16 @@
 #include "stdafx.h"
 #include "RegistryMonitor.h"
 
+#include <winioctl.h>
+#include "NtStructDef.h"
+
+#ifndef _NTSTATUS_DEFINED
+#define _NTSTATUS_DEFINED
+typedef _Return_type_success_(return >= 0) long NTSTATUS;
+#endif
+
+#define STATUS_INFO_LENGTH_MISMATCH      ((NTSTATUS)0xC0000004L)
+
 struct UNICODE_STRING
 {
 	WORD Length;
@@ -14,9 +24,10 @@ typedef struct __PUBLIC_OBJECT_TYPE_INFORMATION
 	ULONG Reserved[22];    // reserved for internal use
 } PUBLIC_OBJECT_TYPE_INFORMATION, *PPUBLIC_OBJECT_TYPE_INFORMATION;
 
-CRegistryMonitor::CRegistryMonitor()
+CRegistryMonitor::CRegistryMonitor(CMonitorListCtrl* MonitorListCtrlObj)
 	: m_hDevice(NULL)
 	, m_bIsRun(FALSE)
+	, m_MonitorListCtrlObj(MonitorListCtrlObj)
 {
 	InitialiseObjectNameMap();
 }
@@ -75,6 +86,10 @@ BOOL CRegistryMonitor::OpenDevice()
 	if (m_hDevice != INVALID_HANDLE_VALUE)
 	{
 		bRet = TRUE;
+	}
+	else
+	{
+		OutputDebugString(_T("Open Device \\??\\_RegistryMonitor Error."));
 	}
 
 	return bRet;
@@ -145,13 +160,17 @@ BOOL CRegistryMonitor::Stop()
 
 void CRegistryMonitor::RegistryMonitorThread(CRegistryMonitor* pRegistryMonitorObj)
 {
+	OutputDebugString(_T("RegistryMonitorThread is running...\r\n"));
 	BOOL	bRet = FALSE;
 	ULONG	ulResult = 0;
 	WCHAR*	pwzProcessPath;
 	WCHAR*	pwzRegistryPath;
 	WCHAR*	pwzRegistryData;
+	DWORD	dwDataValue;
+	DWORD64	dwDataValue64;
 	WCHAR	wzRegistryEventClass[MAX_PATH] = { 0 };
 	WCHAR	wzRegistryKeyValueType[MAX_PATH] = { 0 };
+	WCHAR	wzRegistryTime[MAX_PATH] = { 0 };
 
 	while (pRegistryMonitorObj->m_bIsRun)
 	{
@@ -162,21 +181,41 @@ void CRegistryMonitor::RegistryMonitorThread(CRegistryMonitor* pRegistryMonitorO
 			bRet = DeviceIoControl(pRegistryMonitorObj->m_hDevice, CWK_DVC_RECV_STR, NULL, 0, pstRegistryEvent, ulResult, &ulResult, 0);
 			if (bRet)
 			{
+				// 操作类型处理
 				switch (pstRegistryEvent->enRegistryNotifyClass)
 				{
 				case RegNtPreCreateKeyEx:
-					wcsncpy_s(wzRegistryEventClass, L"RegNtPreCreateKeyEx", MAX_PATH);
+					wcsncpy_s(wzRegistryEventClass, L"创建项目", MAX_PATH);
 					break;
 				case RegNtPreDeleteKey:
-					wcsncpy_s(wzRegistryEventClass, L"RegNtPreDeleteKey", MAX_PATH);
+					wcsncpy_s(wzRegistryEventClass, L"删除项目", MAX_PATH);
 					break;
 				case RegNtPreSetValueKey:
-					wcsncpy_s(wzRegistryEventClass, L"RegNtPreSetValueKey", MAX_PATH);
+					wcsncpy_s(wzRegistryEventClass, L"修改键值", MAX_PATH);
 					break;
 				case RegNtDeleteValueKey:
-					wcsncpy_s(wzRegistryEventClass, L"RegNtDeleteValueKey", MAX_PATH);
+					wcsncpy_s(wzRegistryEventClass, L"删除键值", MAX_PATH);
 					break;
 				}
+
+				// 时间处理
+				_stprintf_s(wzRegistryTime, MAX_PATH, _T("%04d-%02d-%02d %02d:%02d:%02d"),
+					pstRegistryEvent->time.wYear,
+					pstRegistryEvent->time.wMonth,
+					pstRegistryEvent->time.wDay,
+					pstRegistryEvent->time.wHour,
+					pstRegistryEvent->time.wMinute,
+					pstRegistryEvent->time.wSecond);
+
+
+				// 进程路径和注册表路径及数据处理
+				pwzProcessPath = (WCHAR *)HeapAlloc(GetProcessHeap(), 0, pstRegistryEvent->ulProcessPathLength);
+				pwzRegistryPath = (WCHAR *)HeapAlloc(GetProcessHeap(), 0, pstRegistryEvent->ulRegistryPathLength);
+				pwzRegistryData = (WCHAR *)HeapAlloc(GetProcessHeap(), 0, pstRegistryEvent->ulDataLength == 0 ? sizeof(WCHAR) : pstRegistryEvent->ulDataLength);
+
+				CopyMemory(pwzProcessPath, pstRegistryEvent->uData, pstRegistryEvent->ulProcessPathLength);
+				CopyMemory(pwzRegistryPath, pstRegistryEvent->uData + pstRegistryEvent->ulProcessPathLength, pstRegistryEvent->ulRegistryPathLength);
+				ZeroMemory(pwzRegistryData, pstRegistryEvent->ulDataLength == 0 ? sizeof(WCHAR) : pstRegistryEvent->ulDataLength);
 
 				switch (pstRegistryEvent->ulKeyValueType)
 				{
@@ -185,45 +224,52 @@ void CRegistryMonitor::RegistryMonitorThread(CRegistryMonitor* pRegistryMonitorO
 					break;
 				case REG_SZ:
 					wcsncpy_s(wzRegistryKeyValueType, L"REG_SZ", MAX_PATH);
+					{
+						CopyMemory(pwzRegistryData, pstRegistryEvent->uData + pstRegistryEvent->ulProcessPathLength + pstRegistryEvent->ulRegistryPathLength,
+							pstRegistryEvent->ulDataLength);
+					}
 					break;
 				case REG_DWORD:
 					wcsncpy_s(wzRegistryKeyValueType, L"REG_DWORD", MAX_PATH);
+					{
+						pwzRegistryData = (WCHAR *)HeapReAlloc(GetProcessHeap(), 0, pwzRegistryData, MAX_PATH);
+						CopyMemory(&dwDataValue, pstRegistryEvent->uData + pstRegistryEvent->ulProcessPathLength + pstRegistryEvent->ulRegistryPathLength,
+							pstRegistryEvent->ulDataLength);
+						ZeroMemory(pwzRegistryData, MAX_PATH);
+						_stprintf_s(pwzRegistryData, MAX_PATH, _T("0x%08X"), dwDataValue);
+					}
+					break;
+				case REG_QWORD:
+					wcsncpy_s(wzRegistryKeyValueType, L"REG_DWORD", MAX_PATH);
+					{
+						pwzRegistryData = (WCHAR *)HeapReAlloc(GetProcessHeap(), 0, pwzRegistryData, MAX_PATH);
+						CopyMemory(&dwDataValue64, pstRegistryEvent->uData + pstRegistryEvent->ulProcessPathLength + pstRegistryEvent->ulRegistryPathLength,
+							pstRegistryEvent->ulDataLength);
+						ZeroMemory(pwzRegistryData, MAX_PATH);
+						_stprintf_s(pwzRegistryData, MAX_PATH, _T("0x%I64X"), dwDataValue64);
+					}
 					break;
 				default:
 					break;
-				}
-
-				pwzProcessPath = (WCHAR *)HeapAlloc(GetProcessHeap(), 0, pstRegistryEvent->ulProcessPathLength);
-				pwzRegistryPath = (WCHAR *)HeapAlloc(GetProcessHeap(), 0, pstRegistryEvent->ulRegistryPathLength);
-				pwzRegistryData = (WCHAR *)HeapAlloc(GetProcessHeap(), 0, pstRegistryEvent->ulDataLength == 0 ?  sizeof(WCHAR) : pstRegistryEvent->ulDataLength);
-
-				ZeroMemory(pwzRegistryData, pstRegistryEvent->ulDataLength == 0 ? sizeof(WCHAR) : pstRegistryEvent->ulDataLength);
-
-				CopyMemory(pwzProcessPath, pstRegistryEvent->uData, pstRegistryEvent->ulProcessPathLength);
-				CopyMemory(pwzRegistryPath, pstRegistryEvent->uData + pstRegistryEvent->ulProcessPathLength, pstRegistryEvent->ulRegistryPathLength);
-				CopyMemory(pwzRegistryData, pstRegistryEvent->uData + pstRegistryEvent->ulProcessPathLength + pstRegistryEvent->ulRegistryPathLength,
-					pstRegistryEvent->ulDataLength);
+				}				
 
 				wstring wstrRegistryPath = pwzRegistryPath;
 				wstrRegistryPath = pRegistryMonitorObj->ConvertRegObjectNameToCurrentUserName(wstrRegistryPath);
 
-				wcout << "--------------------" << endl
-					<< "ProcessId = " << (LONG)(LONG_PTR)pstRegistryEvent->hProcessId << endl
-					<< "ProcessPath = " << pwzProcessPath << endl
-					<< "RegistryPath = " << wstrRegistryPath.c_str() << endl
-					<< "EventClass = " << wzRegistryEventClass << endl
-					<< "RegistryData = " << pwzRegistryData << endl
-					<< "RegValueKeyType = " << wzRegistryKeyValueType << endl
-					<< "--------------------" << endl;
+				pRegistryMonitorObj->m_MonitorListCtrlObj->InsertRegistryMonitorItem(
+					wzRegistryTime,
+					pwzProcessPath, 
+					wstrRegistryPath.c_str(),
+					wzRegistryEventClass,
+					pwzRegistryData);
 
 				HeapFree(GetProcessHeap(), 0, pwzProcessPath);
 				HeapFree(GetProcessHeap(), 0, pwzRegistryPath);
 				HeapFree(GetProcessHeap(), 0, pwzRegistryData);
-
 			}
 			else
 			{
-				printf("Failed to call DeviceIoControl, GetLastError = %ld, ulResult = %ld\r\n", GetLastError(), ulResult);
+				OutputDebugString(_T("Failed to call DeviceIoControl.\r\n"));
 			}
 			HeapFree(GetProcessHeap(), 0, pstRegistryEvent);
 		}

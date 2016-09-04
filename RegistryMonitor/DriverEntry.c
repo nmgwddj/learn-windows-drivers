@@ -299,7 +299,7 @@ NTSTATUS RegistryCallback(
 				NULL,
 				pSetKeyValue->Object);
 			if (bSuccess && pSetKeyValue->ValueName->Length > 0 && 
-				(REG_SZ == pSetKeyValue->Type || REG_DWORD == pSetKeyValue->Type))
+				(REG_SZ == pSetKeyValue->Type || REG_DWORD == pSetKeyValue->Type || REG_QWORD == pSetKeyValue->Type))
 			{
 				RtlUnicodeStringCatString(&usRegistryPath, L"\\");
 				RtlUnicodeStringCat(&usRegistryPath, pSetKeyValue->ValueName);
@@ -307,17 +307,6 @@ NTSTATUS RegistryCallback(
 				ulKeyValueType = pSetKeyValue->Type;
 				ulDataSize = pSetKeyValue->DataSize;
 				pData = pSetKeyValue->Data;
-
-				// Data 是以 \0 为结尾的字符串，- sizoef(WCHAR) 是为了不复制 \0
-				/*UNICODE_STRING	usData = { 0 };
-				usData.Buffer = ExAllocatePoolWithTag(NonPagedPool, pSetKeyValue->DataSize - sizeof(WCHAR), MEM_TAG);
-				usData.Length = (USHORT)pSetKeyValue->DataSize - sizeof(WCHAR);
-				usData.MaximumLength = MAX_STRING_LENGTH;
-
-				RtlCopyMemory(usData.Buffer, pSetKeyValue->Data, pSetKeyValue->DataSize - sizeof(WCHAR));
-
-				KdPrint(("[RegNtPreSetValueKey]: %wZ, Data = %wZ\r\n", &usRegistryPath, &usData));
-				ExFreePoolWithTag(usData.Buffer, MEM_TAG);*/
 			}
 			else
 			{
@@ -344,7 +333,7 @@ NTSTATUS RegistryCallback(
 	if (usRegistryPath.Length != 0)
 	{
 		PEVENT_DATA_NODE	pNode = InitListNode();
-		ULONG				ulProcessPathLength = (ULONG)(wcslen(wzProcessPath) * sizeof(WCHAR) + sizeof(WCHAR));							// 进程的长度
+		ULONG				ulProcessPathLength = (ULONG)(wcslen(wzProcessPath) * sizeof(WCHAR) + sizeof(WCHAR));					// 进程的长度
 		ULONG				ulRegistryPathLength = usRegistryPath.Length + sizeof(WCHAR);											// 注册表路径的长度
 		SIZE_T				ulNumberOfBytes = sizeof(REGISTRY_EVENT) + ulProcessPathLength + ulRegistryPathLength + ulDataSize;		// 总长度=进程+注册表+数据
 
@@ -358,6 +347,8 @@ NTSTATUS RegistryCallback(
 		pNode->pstRegistryEvent->ulRegistryPathLength		= ulRegistryPathLength;
 		pNode->pstRegistryEvent->ulKeyValueType				= ulKeyValueType;
 		
+		RtlTimeToTimeFields(&unCurrentLocalTime, &pNode->pstRegistryEvent->time);											// 时间信息
+
 		RtlCopyBytes(pNode->pstRegistryEvent->uData,						wzProcessPath, ulProcessPathLength);			// 拷贝进程信息
 		RtlCopyBytes(pNode->pstRegistryEvent->uData + ulProcessPathLength,	usRegistryPath.Buffer, usRegistryPath.Length);	// 追加注册表路径信息
 		pNode->pstRegistryEvent->uData[ulProcessPathLength + usRegistryPath.Length + 0] = '\0';								// 给注册表路径后面添加 \0 结束符

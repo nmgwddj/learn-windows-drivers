@@ -17,3 +17,4 @@
 #include <process.h>
 #include <ntstatus.h>
 #include "NtStructDef.h"
+//

@@ -3,13 +3,14 @@
 #include <string>
 #include <thread>
 #include <iostream>
+#include "MonitorListCtrl.h"
 
 using namespace std;
 
 class CRegistryMonitor
 {
 public:
-	CRegistryMonitor();
+	CRegistryMonitor(CMonitorListCtrl* MonitorListCtrlObj);
 	~CRegistryMonitor();
 
 	BOOL	GetCurrentUserKey(LPTSTR lpCurrentUserKey);
@@ -18,8 +19,8 @@ public:
 	void	InitialiseObjectNameMap();
 	wstring	ConvertRegObjectNameToCurrentUserName(wstring& wstrRegObjectName);
 
-	BOOL Run();
-	BOOL Stop();
+	BOOL	Run();
+	BOOL	Stop();
 
 protected:
 	static void RegistryMonitorThread(CRegistryMonitor* pRegistryMonitorObj);
@@ -29,5 +30,6 @@ private:
 	HANDLE						m_hDevice;
 	map<wstring, wstring>		m_mapNameMapObj;
 	thread						m_Thread;
+	CMonitorListCtrl*			m_MonitorListCtrlObj;
 };
 
