@@ -19,7 +19,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <Inf Include="RegsiterMonitor.inf">
+    <Inf Include="RegistryMonitor.inf">
       <Filter>Driver Files</Filter>
     </Inf>
   </ItemGroup>

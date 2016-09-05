@@ -31,7 +31,7 @@ NTSTATUS CreateDevice(PDRIVER_OBJECT pDriverObject)
 	UNICODE_STRING usDeviceName;
 	UNICODE_STRING usSymbolicName;
 
-	RtlInitUnicodeString(&usDeviceName, L"\\Device\\Communication");
+	RtlInitUnicodeString(&usDeviceName, L"\\Device\\_ProcessMonitor");
 
 	status = IoCreateDevice(
 		pDriverObject,
@@ -48,7 +48,7 @@ NTSTATUS CreateDevice(PDRIVER_OBJECT pDriverObject)
 
 	pDeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
 
-	RtlInitUnicodeString(&usSymbolicName, L"\\??\\Communication");
+	RtlInitUnicodeString(&usSymbolicName, L"\\??\\_ProcessMonitor");
 
 	status = IoCreateSymbolicLink(&usSymbolicName, &usDeviceName);
 	if (!NT_SUCCESS(status))
@@ -64,7 +64,7 @@ NTSTATUS CreateCompleteRoutine(PDEVICE_OBJECT pDeviceObject, PIRP pIrp)
 {
 	NTSTATUS status = STATUS_SUCCESS;
 
-	KdPrint(("Create..."));
+	KdPrint(("Create...\r\n"));
 
 	pIrp->IoStatus.Status = status;
 	pIrp->IoStatus.Information = 0;
@@ -78,7 +78,7 @@ NTSTATUS CloseCompleteRoutine(PDEVICE_OBJECT pDeviceObject, PIRP pIrp)
 {
 	NTSTATUS status = STATUS_SUCCESS;
 
-	KdPrint(("Close..."));
+	KdPrint(("Close...\r\n"));
 
 	pIrp->IoStatus.Status = status;
 	pIrp->IoStatus.Information = 0;
@@ -92,7 +92,7 @@ NTSTATUS ReadCompleteRoutine(PDEVICE_OBJECT pDeviceObject, PIRP pIrp)
 {
 	NTSTATUS status = STATUS_SUCCESS;
 
-	KdPrint(("Read..."));
+	KdPrint(("Read...\r\n"));
 
 	pIrp->IoStatus.Status = status;
 	pIrp->IoStatus.Information = 0;
@@ -106,7 +106,7 @@ NTSTATUS WriteCompleteRoutine(PDEVICE_OBJECT pDeviceObject, PIRP pIrp)
 {
 	NTSTATUS status = STATUS_SUCCESS;
 
-	KdPrint(("Write..."));
+	KdPrint(("Write...\r\n"));
 
 	pIrp->IoStatus.Status = status;
 	pIrp->IoStatus.Information = 0;
@@ -242,14 +242,14 @@ VOID CreateProcessNotifyEx(
 VOID DriverUnLoad(PDRIVER_OBJECT pDriverObject)
 {
 	UNICODE_STRING usSymbolicName;
-	RtlInitUnicodeString(&usSymbolicName, L"\\??\\Communication");
+	RtlInitUnicodeString(&usSymbolicName, L"\\??\\_ProcessMonitor");
 
 	// 删除符号链接和设备对象
 	if (NULL != pDriverObject->DeviceObject)
 	{
 		IoDeleteSymbolicLink(&usSymbolicName);
 		IoDeleteDevice(pDriverObject->DeviceObject);
-		KdPrint(("Unload driver success.."));
+		KdPrint(("Unload driver success..\r\n"));
 	}
 
 	// 恢复进程监控回调
@@ -279,13 +279,13 @@ NTSTATUS DriverEntry(PDRIVER_OBJECT pDriverObject, PUNICODE_STRING pRegistryPath
 {
 	NTSTATUS status = STATUS_SUCCESS;
 
-	KdPrint(("pRegistryPath = %wZ", pRegistryPath));
+	KdPrint(("pRegistryPath = %wZ\r\n", pRegistryPath));
 
 	// 创建进程监视回调
 	status = PsSetCreateProcessNotifyRoutineEx(CreateProcessNotifyEx, FALSE);
 	if (!NT_SUCCESS(status))
 	{
-		KdPrint(("Failed to call PsSetCreateProcessNotifyRoutineEx, error code = 0x%08X", status));
+		KdPrint(("Failed to call PsSetCreateProcessNotifyRoutineEx, error code = 0x%08X\r\n", status));
 	}
 
 	// 初始化事件、锁、链表头
