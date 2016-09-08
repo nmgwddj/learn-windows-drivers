@@ -25,8 +25,8 @@ typedef struct __PUBLIC_OBJECT_TYPE_INFORMATION
 } PUBLIC_OBJECT_TYPE_INFORMATION, *PPUBLIC_OBJECT_TYPE_INFORMATION;
 
 CRegistryMonitor::CRegistryMonitor(CMonitorListCtrl* MonitorListCtrlObj)
-	: m_hDevice(NULL)
-	, m_bIsRun(FALSE)
+	: m_bIsRun(FALSE)
+	, m_hDevice(nullptr)
 	, m_MonitorListCtrlObj(MonitorListCtrlObj)
 {
 	InitialiseObjectNameMap();
@@ -76,7 +76,7 @@ BOOL CRegistryMonitor::OpenDevice()
 	BOOL bRet = FALSE;
 
 	m_hDevice = CreateFile(
-		_T("\\??\\_RegistryMonitor"), 
+		REGISTRY_MONITOR_SYMBOLIC, 
 		GENERIC_READ | GENERIC_WRITE, 
 		0, 
 		0, 
@@ -170,7 +170,7 @@ void CRegistryMonitor::RegistryMonitorThread(CRegistryMonitor* pRegistryMonitorO
 	DWORD64	dwDataValue64;
 	WCHAR	wzRegistryEventClass[MAX_PATH] = { 0 };
 	WCHAR	wzRegistryKeyValueType[MAX_PATH] = { 0 };
-	WCHAR	wzRegistryTime[MAX_PATH] = { 0 };
+	WCHAR	wzRegistryTime[MAX_TIME_LENGTH] = { 0 };
 
 	while (pRegistryMonitorObj->m_bIsRun)
 	{

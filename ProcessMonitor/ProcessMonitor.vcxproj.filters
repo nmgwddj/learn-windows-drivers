@@ -30,9 +30,21 @@
     <ClCompile Include="ProcessMgr.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="IODeviceControl.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ListEntry.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ProcessMgr.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="IODeviceControl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ListEntry.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

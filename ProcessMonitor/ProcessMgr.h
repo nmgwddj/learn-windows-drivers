@@ -1,4 +1,7 @@
-#pragma once
+#ifndef __PROCESSMGR_H__
+#define __PROCESSMGR_H__
+#include <ntifs.h>
+#include "NtStructDef.h"
 
 typedef struct _CONTROL_AREA64
 {
@@ -95,8 +98,9 @@ typedef NTSTATUS(*ZWQUERYINFORMATIONPROCESS) (
 extern ZWQUERYINFORMATIONPROCESS ZwQueryInformationProcess;
 ZWQUERYINFORMATIONPROCESS ZwQueryInformationProcess;
 
-
 // º¯ÊýÉùÃ÷
 PCHAR GetProcessNameByProcessId(HANDLE hProcessId);
 BOOLEAN GetProcessPathBySectionObject(HANDLE ulProcessID, WCHAR* wzProcessPath);
 BOOLEAN GetPathByFileObject(PFILE_OBJECT FileObject, WCHAR* wzPath);
+
+#endif

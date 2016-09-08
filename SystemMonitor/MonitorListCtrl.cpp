@@ -37,8 +37,9 @@ void CMonitorListCtrl::InsertRegistryMonitorItem(LPCTSTR wzRegistryTime, LPCTSTR
 {
 	CCusMutex mutexTemp(_T("InsertUICtrlList"));
 
-	LockWindowUpdate();
-	int nItem = InsertItem(0, wzRegistryTime);
+	//LockWindowUpdate();
+
+	int nItem = InsertItem(GetItemCount(), wzRegistryTime);
 	SetItemText(nItem, 1, pwzProcessPath);
 	SetItemText(nItem, 2, wzRegistryEventClass);
 	SetItemText(nItem, 3, pwzRegistryPath);
@@ -46,15 +47,16 @@ void CMonitorListCtrl::InsertRegistryMonitorItem(LPCTSTR wzRegistryTime, LPCTSTR
 
 	SetItemData(nItem, RegistryItem);
 
-	UnlockWindowUpdate();
+	//UnlockWindowUpdate();
 }
 
 void CMonitorListCtrl::InsertProcessMonitorItem(LPCTSTR wzProcessTime, LPCTSTR pwzParentProcessPath, LPCTSTR pwzProcessPath, LPCTSTR pwzIsCreateProcess, LPCTSTR pwzCommandLine)
 {
 	CCusMutex mutexTemp(_T("InsertUICtrlList"));
 
-	LockWindowUpdate();
-	int nItem = InsertItem(0, wzProcessTime);
+	// LockWindowUpdate();
+	
+	int nItem = InsertItem(GetItemCount(), wzProcessTime);
 	SetItemText(nItem, 1, pwzParentProcessPath);
 	SetItemText(nItem, 2, pwzIsCreateProcess);
 	SetItemText(nItem, 3, pwzProcessPath);
@@ -62,7 +64,7 @@ void CMonitorListCtrl::InsertProcessMonitorItem(LPCTSTR wzProcessTime, LPCTSTR p
 
 	SetItemData(nItem, ProcessItem);
 
-	UnlockWindowUpdate();
+	// UnlockWindowUpdate();
 }
 
 BEGIN_MESSAGE_MAP(CMonitorListCtrl, CListCtrl)
