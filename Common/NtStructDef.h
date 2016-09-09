@@ -5,7 +5,16 @@
 #define MEM_TAG 'MEM'
 
 // 字符串长度
-#define MAX_STRING_LENGTH 512
+#define MAX_STRING_LENGTH			512
+#define MAX_PID_LENGTH				32
+#define MAX_TIME_LENGTH				20
+
+// 启动符号链接
+#define REGISTRY_MONITOR_DEVICE		L"\\Device\\_RegistryMonitor"
+#define REGISTRY_MONITOR_SYMBOLIC	L"\\??\\_RegistryMonitor"
+#define PROCESS_MONITOR_DEVICE		L"\\Device\\_ProcessMonitor"
+#define PROCESS_MONITOR_SYMBOLIC	L"\\??\\_ProcessMonitor"
+
 
 // 从应用层给驱动发送一个字符串。
 #define  CWK_DVC_SEND_STR \
@@ -121,10 +130,13 @@ typedef enum _REG_NOTIFY_CLASS {
 
 typedef struct _PROCESSINFO
 {
-	HANDLE	hParentId;
-	HANDLE	hProcessId;
-	WCHAR	wsProcessPath[MAX_STRING_LENGTH];
-	WCHAR	wsProcessCommandLine[MAX_STRING_LENGTH];
+	TIME_FIELDS			time;						// 时间
+	HANDLE				hParentProcessId;			// 父进程 ID
+	ULONG				ulParentProcessLength;		// 父进程长度
+	HANDLE				hProcessId;					// 子进程 ID
+	ULONG				ulProcessLength;			// 子进程长度
+	ULONG				ulCommandLineLength;		// 进程命令行参数长度
+	UCHAR				uData[1];					// 数据域
 } PROCESSINFO, *PPROCESSINFO;
 
 typedef struct _REGISTRY_EVENT

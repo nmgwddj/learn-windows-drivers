@@ -7,10 +7,6 @@ typedef struct
 	PPROCESSINFO	pProcessInfo;
 } PROCESSNODE, *PPROCESSNODE;
 
-KSPIN_LOCK	g_Lock;			// 用于链表的锁
-KEVENT		g_Event;		// 用于通知的事件
-LIST_ENTRY	g_ListHead;		// 连表头
-
 PPROCESSNODE InitListNode()
 {
 	PPROCESSNODE pNode = NULL;
