@@ -1,5 +1,7 @@
-#pragma once
+#ifndef __PROCESSMGR_H__
+#define __PROCESSMGR_H__
 #include <ntifs.h>
+#include "NtStructDef.h"
 
 typedef struct _CONTROL_AREA64
 {
@@ -72,6 +74,11 @@ typedef struct _SECTION_OBJECT64
 	PVOID64 Segment;
 } SECTION_OBJECT64, *PSECTION_OBJECT64;
 
+NTSTATUS PsReferenceProcessFilePointer(
+	IN PEPROCESS Process,
+	OUT PVOID *pFilePointer
+);
+
 NTKERNELAPI PCHAR PsGetProcessImageFileName(
 	PEPROCESS Process
 );
@@ -96,12 +103,6 @@ typedef NTSTATUS(*ZWQUERYINFORMATIONPROCESS) (
 extern ZWQUERYINFORMATIONPROCESS ZwQueryInformationProcess;
 ZWQUERYINFORMATIONPROCESS ZwQueryInformationProcess;
 
-
-// 函数声明
-PCHAR GetProcessNameByProcessId(HANDLE hProcessId);
-BOOLEAN GetProcessPathBySectionObject(HANDLE hProcessID, WCHAR* wzProcessPath);
-BOOLEAN GetPathByFileObject(PFILE_OBJECT FileObject, WCHAR* wzPath);
-
 PCHAR GetProcessNameByProcessId(
 	HANDLE hProcessId
 )
@@ -120,70 +121,19 @@ PCHAR GetProcessNameByProcessId(
 	return pProcessName;
 }
 
-BOOLEAN GetProcessPathBySectionObject(HANDLE hProcessID, WCHAR* wzProcessPath)
-{
-	PEPROCESS			EProcess = NULL;
-	PSECTION_OBJECT		SectionObject = NULL;
-	PSECTION_OBJECT64	SectionObject64 = NULL;
-	//PSEGMENT			Segment = NULL;
-	PSEGMENT64			Segment64 = NULL;
-	//PCONTROL_AREA		ControlArea = NULL;
-	PCONTROL_AREA64		ControlArea64 = NULL;
-	PFILE_OBJECT		FileObject = NULL;
-	BOOLEAN				bGetPath = FALSE;
-	ULONG				SectionObjectOfEProcess = 0x268;
-
-	if (NT_SUCCESS(PsLookupProcessByProcessId(hProcessID, &EProcess)))
-	{
-		if (SectionObjectOfEProcess != 0 && MmIsAddressValid((PVOID)((ULONG_PTR)EProcess + SectionObjectOfEProcess)))
-		{
-			SectionObject64 = *(PSECTION_OBJECT64*)((ULONG_PTR)EProcess + SectionObjectOfEProcess);
-			if (SectionObject64 && MmIsAddressValid(SectionObject64))
-			{
-				Segment64 = (PSEGMENT64)(SectionObject64->Segment);
-				if (Segment64 && MmIsAddressValid(Segment64))
-				{
-					ControlArea64 = (PCONTROL_AREA64)Segment64->ControlArea;
-					if (ControlArea64 && MmIsAddressValid(ControlArea64))
-					{
-						FileObject = (PFILE_OBJECT)ControlArea64->FilePointer;
-						if (FileObject&&MmIsAddressValid(FileObject))
-						{
-							FileObject = (PFILE_OBJECT)((ULONG_PTR)FileObject & 0xFFFFFFFFFFFFFFF0);
-							bGetPath = GetPathByFileObject(FileObject, wzProcessPath);
-							if (!bGetPath)
-							{
-								DbgPrint("SectionObject: 0x%08X, FileObject: 0x%08X\n", SectionObject, FileObject);
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-	if (bGetPath == FALSE)
-	{
-		wcscpy(wzProcessPath, L"Unknow");
-	}
-
-	return bGetPath;
-
-}
-
 BOOLEAN GetPathByFileObject(PFILE_OBJECT FileObject, WCHAR* wzPath)
 {
 	BOOLEAN bGetPath = FALSE;
-	//CHAR szIoQueryFileDosDeviceName[] = "IoQueryFileDosDeviceName";
-	//CHAR szIoVolumeDeviceToDosName[] = "IoVolumeDeviceToDosName";
-	//CHAR szRtlVolumeDeviceToDosName[] = "RtlVolumeDeviceToDosName";
 
 	POBJECT_NAME_INFORMATION ObjectNameInformation = NULL;
 	__try
 	{
 		if (FileObject && MmIsAddressValid(FileObject) && wzPath)
 		{
+			KdPrint(("MmIsAddressValid success."));
 			if (NT_SUCCESS(IoQueryFileDosDeviceName(FileObject, &ObjectNameInformation)))   //注意该函数调用后要释放内存
 			{
+				KdPrint(("IoQueryFileDosDeviceName success."));
 				wcsncpy(wzPath, ObjectNameInformation->Name.Buffer, ObjectNameInformation->Name.Length);
 
 				bGetPath = TRUE;
@@ -208,6 +158,7 @@ BOOLEAN GetPathByFileObject(PFILE_OBJECT FileObject, WCHAR* wzPath)
 						if (NT_SUCCESS(Status))
 						{
 							POBJECT_NAME_INFORMATION Temp = (POBJECT_NAME_INFORMATION)Buffer;
+							KdPrint(("ObQueryNameString success.%wZ\r\n", Temp));
 
 							WCHAR szHarddiskVolume[100] = L"\\Device\\HarddiskVolume";
 
@@ -270,3 +221,37 @@ BOOLEAN GetPathByFileObject(PFILE_OBJECT FileObject, WCHAR* wzPath)
 	return bGetPath;
 }
 
+BOOLEAN GetProcessPathBySectionObject(HANDLE ulProcessID, WCHAR* wzProcessPath)
+{
+	PEPROCESS			EProcess = NULL;
+	PFILE_OBJECT		FileObject = NULL;
+	BOOLEAN				bGetPath = FALSE;
+
+	if (NT_SUCCESS(PsLookupProcessByProcessId(ulProcessID, &EProcess)))
+	{
+		PsReferenceProcessFilePointer(EProcess, (PVOID)&FileObject);
+		if (FileObject && MmIsAddressValid(FileObject))
+		{
+			FileObject = (PFILE_OBJECT)((ULONG_PTR)FileObject & 0xFFFFFFFFFFFFFFF0);
+			bGetPath = GetPathByFileObject(FileObject, wzProcessPath);
+			if (!bGetPath)
+			{
+				KdPrint(("Failed to get process full path by object, FileObject = 0x%08X", FileObject));
+			}
+		}
+	}
+	else
+	{
+		KdPrint(("Failed to call PsLookupProcessByProcessId.\r\n"));
+	}
+
+	if (bGetPath == FALSE)
+	{
+		wcscpy(wzProcessPath, L"Unknow");
+	}
+
+	return bGetPath;
+
+}
+
+#endif

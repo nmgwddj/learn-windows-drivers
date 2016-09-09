@@ -126,11 +126,10 @@ typedef enum _REG_NOTIFY_CLASS {
 } REG_NOTIFY_CLASS;
 #endif
 
-
-
 typedef struct _PROCESSINFO
 {
 	TIME_FIELDS			time;						// 时间
+	BOOLEAN				bIsCreate;					// 是否是创建进程
 	HANDLE				hParentProcessId;			// 父进程 ID
 	ULONG				ulParentProcessLength;		// 父进程长度
 	HANDLE				hProcessId;					// 子进程 ID

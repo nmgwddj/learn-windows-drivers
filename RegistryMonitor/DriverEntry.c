@@ -213,16 +213,11 @@ NTSTATUS RegistryCallback(
 	PVOID				pData = NULL;
 	ULONG				ulDataSize = 0;
 	ULONG				ulKeyValueType = REG_NONE;
-	HANDLE				hProcessId = NULL;
 	WCHAR				wzProcessPath[MAX_STRING_LENGTH] = { 0 };
 
 	// 时间
 	KeQuerySystemTime(&unCurrentSystemTime);
 	ExSystemTimeToLocalTime(&unCurrentSystemTime, &unCurrentLocalTime);
-
-	// 进程路径
-	hProcessId = PsGetCurrentProcessId();
-	GetProcessPathBySectionObject(hProcessId, wzProcessPath);
 
 	ulCallbackCtx = (ULONG)(ULONG_PTR)CallbackContext;
 
@@ -333,10 +328,15 @@ NTSTATUS RegistryCallback(
 	if (usRegistryPath.Length != 0)
 	{
 		PEVENT_DATA_NODE	pNode = InitListNode();
+		HANDLE				hProcessId = NULL;
+
+		hProcessId = PsGetCurrentProcessId();
+		GetProcessPathBySectionObject(hProcessId, wzProcessPath);
+
 		ULONG				ulProcessPathLength = (ULONG)(wcslen(wzProcessPath) * sizeof(WCHAR) + sizeof(WCHAR));					// 进程的长度
 		ULONG				ulRegistryPathLength = usRegistryPath.Length + sizeof(WCHAR);											// 注册表路径的长度
 		SIZE_T				ulNumberOfBytes = sizeof(REGISTRY_EVENT) + ulProcessPathLength + ulRegistryPathLength + ulDataSize;		// 总长度=进程+注册表+数据
-
+																																	// 进程路径
 		pNode->pstRegistryEvent = ExAllocatePoolWithTag(NonPagedPool, ulNumberOfBytes, MEM_TAG);
 
 		// 给各节点数据赋值
@@ -357,6 +357,8 @@ NTSTATUS RegistryCallback(
 
 		ExInterlockedInsertTailList(&g_ListHead, (PLIST_ENTRY)pNode, &g_Lock);
 		KeSetEvent(&g_Event, 0, FALSE);
+
+		KdPrint(("hProcessId = %ld", hProcessId));
 	}
 
 	if (NULL != usRegistryPath.Buffer)

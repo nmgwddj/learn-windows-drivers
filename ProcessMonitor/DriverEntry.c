@@ -32,6 +32,7 @@ VOID CreateProcessNotifyEx(
 
 			pNode->pProcessInfo = ExAllocatePoolWithTag(NonPagedPool, ulNumberOfBytes, MEM_TAG);
 
+			pNode->pProcessInfo->bIsCreate					= TRUE;
 			pNode->pProcessInfo->hParentProcessId			= CreateInfo->ParentProcessId;
 			pNode->pProcessInfo->ulParentProcessLength		= ulParentProcessLength;
 			pNode->pProcessInfo->hProcessId					= ProcessId;
@@ -41,24 +42,16 @@ VOID CreateProcessNotifyEx(
 			RtlTimeToTimeFields(&unCurrentLocalTime, &pNode->pProcessInfo->time);
 
 			RtlCopyBytes(pNode->pProcessInfo->uData, wzProcessPath, ulParentProcessLength);
-			RtlCopyBytes(pNode->pProcessInfo->uData + ulParentProcessLength, CreateInfo->ImageFileName->Buffer, ulProcessLength);
-			pNode->pProcessInfo->uData[ulParentProcessLength + ulProcessLength + 0] = '\0';
-			pNode->pProcessInfo->uData[ulParentProcessLength + ulProcessLength + 1] = '\0';
-			RtlCopyBytes(pNode->pProcessInfo->uData + ulParentProcessLength + ulProcessLength, CreateInfo->CommandLine->Buffer, ulCommandLineLength);
-			pNode->pProcessInfo->uData[ulParentProcessLength + ulProcessLength + ulCommandLineLength + 0] = '\0';
-			pNode->pProcessInfo->uData[ulParentProcessLength + ulProcessLength + ulCommandLineLength + 1] = '\0';
+			RtlCopyBytes(pNode->pProcessInfo->uData + ulParentProcessLength, CreateInfo->ImageFileName->Buffer, CreateInfo->ImageFileName->Length);
+			pNode->pProcessInfo->uData[ulParentProcessLength + CreateInfo->ImageFileName->Length + 0] = '\0';
+			pNode->pProcessInfo->uData[ulParentProcessLength + CreateInfo->ImageFileName->Length + 1] = '\0';
+			RtlCopyBytes(pNode->pProcessInfo->uData + ulParentProcessLength + ulProcessLength, CreateInfo->CommandLine->Buffer, CreateInfo->CommandLine->Length);
+			pNode->pProcessInfo->uData[ulParentProcessLength + ulProcessLength + CreateInfo->CommandLine->Length + 0] = '\0';
+			pNode->pProcessInfo->uData[ulParentProcessLength + ulProcessLength + CreateInfo->CommandLine->Length + 1] = '\0';
 
 			ExInterlockedInsertTailList(&g_ListHead, (PLIST_ENTRY)pNode, &g_Lock);
 			KeSetEvent(&g_Event, 0, FALSE);
 		}
-
-		KdPrint(("CreateProcess begin ----------------------\r\n"));
-		KdPrint(("ProcessId: %ld\r\n", ProcessId));
-		KdPrint(("ProcessPath: %wZ\r\n", CreateInfo->ImageFileName));
-		KdPrint(("ProcessCommandLine: %wZ\r\n", CreateInfo->CommandLine));
-		KdPrint(("ParentProcessId: %ld\r\n", CreateInfo->ParentProcessId));
-		KdPrint(("ParentProcessPath: %ws\r\n", wzProcessPath));
-		KdPrint(("CreateProcess end ----------------------\r\n"));
 	}
 	else
 	{
@@ -87,13 +80,13 @@ VOID CreateProcessNotify(
 	}
 	else
 	{
-		KdPrint(("ExitProcess begin ----------------------"));
+		/*KdPrint(("ExitProcess begin ----------------------"));
 		KdPrint(("ProcessId: %ld", ProcessId));
 		KdPrint(("ProcessName: %s", GetProcessNameByProcessId(ProcessId)));
 		KdPrint(("ProcessPath: %ws", wzProcessPath));
 		KdPrint(("ParentProcessId: %ld", ParentId));
 		KdPrint(("ParentProcessPath: %ws", wzParentProcessPath));
-		KdPrint(("ExitProcess end ----------------------"));
+		KdPrint(("ExitProcess end ----------------------"));*/
 		/*KdPrint(("[CreateProcessNotify] [%04ld] %ws 进程退出，父进程：[%04ld] %ws",
 			ProcessId, wzProcessPath, ParentId, wzParentProcessPath));*/
 	}

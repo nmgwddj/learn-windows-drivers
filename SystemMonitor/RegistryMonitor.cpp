@@ -166,6 +166,7 @@ void CRegistryMonitor::RegistryMonitorThread(CRegistryMonitor* pRegistryMonitorO
 	WCHAR*	pwzProcessPath;
 	WCHAR*	pwzRegistryPath;
 	WCHAR*	pwzRegistryData;
+	WCHAR*	pwzProcessInfo;
 	DWORD	dwDataValue;
 	DWORD64	dwDataValue64;
 	WCHAR	wzRegistryEventClass[MAX_PATH] = { 0 };
@@ -212,10 +213,14 @@ void CRegistryMonitor::RegistryMonitorThread(CRegistryMonitor* pRegistryMonitorO
 				pwzProcessPath = (WCHAR *)HeapAlloc(GetProcessHeap(), 0, pstRegistryEvent->ulProcessPathLength);
 				pwzRegistryPath = (WCHAR *)HeapAlloc(GetProcessHeap(), 0, pstRegistryEvent->ulRegistryPathLength);
 				pwzRegistryData = (WCHAR *)HeapAlloc(GetProcessHeap(), 0, pstRegistryEvent->ulDataLength == 0 ? sizeof(WCHAR) : pstRegistryEvent->ulDataLength);
+				pwzProcessInfo = (WCHAR *)HeapAlloc(GetProcessHeap(), 0, pstRegistryEvent->ulProcessPathLength + MAX_PID_LENGTH);
 
 				CopyMemory(pwzProcessPath, pstRegistryEvent->uData, pstRegistryEvent->ulProcessPathLength);
 				CopyMemory(pwzRegistryPath, pstRegistryEvent->uData + pstRegistryEvent->ulProcessPathLength, pstRegistryEvent->ulRegistryPathLength);
 				ZeroMemory(pwzRegistryData, pstRegistryEvent->ulDataLength == 0 ? sizeof(WCHAR) : pstRegistryEvent->ulDataLength);
+
+				_stprintf_s(pwzProcessInfo, pstRegistryEvent->ulProcessPathLength + MAX_PID_LENGTH,
+					_T("[%I64d] %ws"), (LONG64)pstRegistryEvent->hProcessId, pwzProcessPath);
 
 				switch (pstRegistryEvent->ulKeyValueType)
 				{
@@ -258,11 +263,12 @@ void CRegistryMonitor::RegistryMonitorThread(CRegistryMonitor* pRegistryMonitorO
 
 				pRegistryMonitorObj->m_MonitorListCtrlObj->InsertRegistryMonitorItem(
 					wzRegistryTime,
-					pwzProcessPath, 
+					pwzProcessInfo,
 					wstrRegistryPath.c_str(),
 					wzRegistryEventClass,
 					pwzRegistryData);
 
+				HeapFree(GetProcessHeap(), 0, pwzProcessInfo);
 				HeapFree(GetProcessHeap(), 0, pwzProcessPath);
 				HeapFree(GetProcessHeap(), 0, pwzRegistryPath);
 				HeapFree(GetProcessHeap(), 0, pwzRegistryData);

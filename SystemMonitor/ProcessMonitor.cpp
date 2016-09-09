@@ -15,6 +15,7 @@ CProcessMonitor::CProcessMonitor(CMonitorListCtrl* MonitorListCtrl)
 
 CProcessMonitor::~CProcessMonitor()
 {
+	CloseDevice();
 }
 
 BOOL CProcessMonitor::OpenDevice()
@@ -82,12 +83,13 @@ void CProcessMonitor::ProcessMonitorThread(CProcessMonitor* pProcessMonitorObj)
 	ULONG		uBufferSize = 0;
 	ULONG		ulResult = 0;
 
-	WCHAR		wzCreateProcessTime[MAX_TIME_LENGTH] = { 0 };
-	WCHAR		wzParentProcessId[MAX_PID_LENGTH] = { 0 };
-	WCHAR		wzParentProcessPath[MAX_PATH] = { 0 };
-	WCHAR		wzProcessId[MAX_PID_LENGTH] = { 0 };
-	WCHAR		wzProcessPath[MAX_PATH] = { 0 };
-	WCHAR		wzCommandLine[MAX_STRING_LENGTH] = { 0 };
+	WCHAR		wchCreateProcessTime[MAX_TIME_LENGTH] = { 0 };
+	WCHAR		wchParentProcessPath[MAX_PATH] = { 0 };
+	WCHAR		wchProcessPath[MAX_PATH] = { 0 };
+	WCHAR		wchCommandLine[MAX_STRING_LENGTH * 2] = { 0 };
+
+	WCHAR		wchParentProcessInfo[MAX_PID_LENGTH + MAX_PATH] = { 0 };
+	WCHAR		wchProcessInfo[MAX_PID_LENGTH + MAX_PATH] = { 0 };
 
 	while (pProcessMonitorObj->m_bIsRun)
 	{
@@ -98,11 +100,8 @@ void CProcessMonitor::ProcessMonitorThread(CProcessMonitor* pProcessMonitorObj)
 			bRet = DeviceIoControl(pProcessMonitorObj->m_hDevice, CWK_DVC_RECV_STR, NULL, 0, pstProcessEvent, ulResult, &ulResult, 0);
 			if (bRet)
 			{
-				_stprintf_s(wzParentProcessId, MAX_PATH, _T("%ld"), (LONG)(LONG_PTR)pstProcessEvent->hParentProcessId);
-				_stprintf_s(wzProcessId, MAX_PATH, _T("%ld"), (LONG)(LONG_PTR)pstProcessEvent->hProcessId);
-
 				// 时间处理
-				_stprintf_s(wzCreateProcessTime, MAX_PATH, _T("%04d-%02d-%02d %02d:%02d:%02d"),
+				_stprintf_s(wchCreateProcessTime, MAX_PATH, _T("%04d-%02d-%02d %02d:%02d:%02d"),
 					pstProcessEvent->time.wYear,
 					pstProcessEvent->time.wMonth,
 					pstProcessEvent->time.wDay,
@@ -110,22 +109,29 @@ void CProcessMonitor::ProcessMonitorThread(CProcessMonitor* pProcessMonitorObj)
 					pstProcessEvent->time.wMinute,
 					pstProcessEvent->time.wSecond);
 
-				ZeroMemory(wzParentProcessPath, MAX_PATH);
-				ZeroMemory(wzProcessPath, MAX_PATH);
-				ZeroMemory(wzCommandLine, MAX_STRING_LENGTH);
+				ZeroMemory(wchParentProcessPath, MAX_PATH);
+				ZeroMemory(wchProcessPath, MAX_PATH);
+				ZeroMemory(wchCommandLine, MAX_STRING_LENGTH);
+				ZeroMemory(wchParentProcessInfo, MAX_STRING_LENGTH);
+				ZeroMemory(wchProcessInfo, MAX_STRING_LENGTH);
 
-				CopyMemory(wzParentProcessPath, pstProcessEvent->uData, pstProcessEvent->ulParentProcessLength);
+				CopyMemory(wchParentProcessPath, pstProcessEvent->uData, pstProcessEvent->ulParentProcessLength);
 				uBufferSize += pstProcessEvent->ulParentProcessLength;
-				CopyMemory(wzProcessPath, pstProcessEvent->uData + uBufferSize, pstProcessEvent->ulProcessLength);
+				CopyMemory(wchProcessPath, pstProcessEvent->uData + uBufferSize, pstProcessEvent->ulProcessLength);
 				uBufferSize += pstProcessEvent->ulProcessLength;
-				CopyMemory(wzCommandLine, pstProcessEvent->uData + uBufferSize, pstProcessEvent->ulCommandLineLength);
+				CopyMemory(wchCommandLine, pstProcessEvent->uData + uBufferSize, pstProcessEvent->ulCommandLineLength);
+
+				_stprintf_s(wchParentProcessInfo, MAX_PATH + MAX_PID_LENGTH, _T("[%I64d] %ws"),
+					(LONG64)pstProcessEvent->hParentProcessId, wchParentProcessPath);
+				_stprintf_s(wchProcessInfo, MAX_PATH + MAX_PID_LENGTH, _T("[%I64d] %ws"),
+					(LONG64)pstProcessEvent->hProcessId, wchProcessPath);
 
 				pProcessMonitorObj->m_MonitorListCtrlObj->InsertProcessMonitorItem(
-					wzCreateProcessTime,
-					wzParentProcessPath,
-					wzProcessPath,
-					_T("创建进程"),
-					wzCommandLine);
+					wchCreateProcessTime,
+					wchParentProcessInfo,
+					wchProcessInfo,
+					pstProcessEvent->bIsCreate ? _T("创建进程") : _T("退出进程"),
+					wchCommandLine);
 
 				uBufferSize = 0;
 			}

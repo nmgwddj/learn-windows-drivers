@@ -234,14 +234,12 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="DriverEntry.c" />
-    <ClCompile Include="IODeviceControl.c" />
+    <ClCompile Include="IoDeviceControl.c" />
     <ClCompile Include="ListEntry.c" />
-    <ClCompile Include="ProcessMgr.c" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="IODeviceControl.h" />
+    <ClInclude Include="IoDeviceControl.h" />
     <ClInclude Include="ListEntry.h" />
-    <ClInclude Include="ProcessMgr.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
