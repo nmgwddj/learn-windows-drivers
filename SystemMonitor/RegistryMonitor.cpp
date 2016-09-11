@@ -89,7 +89,7 @@ BOOL CRegistryMonitor::OpenDevice()
 	}
 	else
 	{
-		OutputDebugString(_T("Open Device \\??\\_RegistryMonitor Error."));
+		LOG(ERROR) << _T("Failed to open device \\??\\_RegistryMonitor.");
 	}
 
 	return bRet;
@@ -115,17 +115,17 @@ void CRegistryMonitor::InitialiseObjectNameMap()
 	if (GetCurrentUserKey(szCurrentUserKey))
 	{
 		wstring strCurrentUserKey = szCurrentUserKey;
-		m_mapNameMapObj.insert(pair<wstring, wstring>(strCurrentUserKey, L"HKEY_CURRENT_USER"));
-		m_mapNameMapObj.insert(pair<wstring, wstring>(L"\\REGISTRY\\MACHINE", L"HKEY_LOCAL_MACHINE"));
-		m_mapNameMapObj.insert(pair<wstring, wstring>(L"\\Registry\\Machine", L"HKEY_LOCAL_MACHINE"));
+		m_mapNameObj.insert(pair<wstring, wstring>(strCurrentUserKey, L"HKEY_CURRENT_USER"));
+		m_mapNameObj.insert(pair<wstring, wstring>(L"\\REGISTRY\\MACHINE", L"HKEY_LOCAL_MACHINE"));
+		m_mapNameObj.insert(pair<wstring, wstring>(L"\\Registry\\Machine", L"HKEY_LOCAL_MACHINE"));
 	}
 }
 
 std::wstring CRegistryMonitor::ConvertRegObjectNameToCurrentUserName(wstring& wstrRegObjectName)
 {
-	map<wstring, wstring>::iterator iter = m_mapNameMapObj.begin();
+	map<wstring, wstring>::iterator iter = m_mapNameObj.begin();
 
-	for (; iter != m_mapNameMapObj.end(); iter++)
+	for (; iter != m_mapNameObj.end(); iter++)
 	{
 		size_t position = wstrRegObjectName.rfind(iter->first, 0);
 		if (position != std::wstring::npos)
@@ -160,7 +160,6 @@ BOOL CRegistryMonitor::Stop()
 
 void CRegistryMonitor::RegistryMonitorThread(CRegistryMonitor* pRegistryMonitorObj)
 {
-	OutputDebugString(_T("RegistryMonitorThread is running...\r\n"));
 	BOOL	bRet = FALSE;
 	ULONG	ulResult = 0;
 	WCHAR*	pwzProcessPath;
@@ -275,7 +274,7 @@ void CRegistryMonitor::RegistryMonitorThread(CRegistryMonitor* pRegistryMonitorO
 			}
 			else
 			{
-				OutputDebugString(_T("Failed to call DeviceIoControl.\r\n"));
+				LOG(ERROR) << _T("Failed to call DeviceIoControl.");
 			}
 			HeapFree(GetProcessHeap(), 0, pstRegistryEvent);
 		}

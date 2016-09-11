@@ -1,0 +1,90 @@
+;
+; SystemMonitorDriver.inf
+;
+
+[Version]
+Signature="$WINDOWS NT$"
+Class=Sample ; TODO: edit Class
+ClassGuid={78A1C341-4539-11d3-B88D-00C04FAD5171} ; TODO: edit ClassGuid
+Provider=%ManufacturerName%
+CatalogFile=SystemMonitorDriver.cat
+DriverVer= ; TODO: set DriverVer in stampinf property pages
+
+[DestinationDirs]
+DefaultDestDir = 12
+
+; ================= Class section =====================
+
+[ClassInstall32]
+Addreg=SampleClassReg
+
+[SampleClassReg]
+HKR,,,0,%ClassName%
+HKR,,Icon,,-5
+
+[SourceDisksNames]
+1 = %DiskName%,,,""
+
+[SourceDisksFiles]
+SystemMonitorDriver.sys  = 1,,
+
+;*****************************************
+; Install Section
+;*****************************************
+
+[Manufacturer]
+%ManufacturerName%=Standard,NT$ARCH$
+
+[Standard.NT$ARCH$]
+%SystemMonitorDriver.DeviceDesc%=SystemMonitorDriver_Device, Root\SystemMonitorDriver ; TODO: edit hw-id
+
+[SystemMonitorDriver_Device.NT]
+CopyFiles=Drivers_Dir
+
+[Drivers_Dir]
+SystemMonitorDriver.sys
+
+;-------------- Service installation
+[SystemMonitorDriver_Device.NT.Services]
+AddService = SystemMonitorDriver,%SPSVCINST_ASSOCSERVICE%, SystemMonitorDriver_Service_Inst
+
+; -------------- SystemMonitorDriver driver install sections
+[SystemMonitorDriver_Service_Inst]
+DisplayName    = %SystemMonitorDriver.SVCDESC%
+ServiceType    = 1               ; SERVICE_KERNEL_DRIVER
+StartType      = 3               ; SERVICE_DEMAND_START
+ErrorControl   = 1               ; SERVICE_ERROR_NORMAL
+ServiceBinary  = %12%\SystemMonitorDriver.sys
+
+;
+;--- SystemMonitorDriver_Device Coinstaller installation ------
+;
+
+[DestinationDirs]
+SystemMonitorDriver_Device_CoInstaller_CopyFiles = 11
+
+[SystemMonitorDriver_Device.NT.CoInstallers]
+AddReg=SystemMonitorDriver_Device_CoInstaller_AddReg
+CopyFiles=SystemMonitorDriver_Device_CoInstaller_CopyFiles
+
+[SystemMonitorDriver_Device_CoInstaller_AddReg]
+HKR,,CoInstallers32,0x00010000, "WdfCoInstaller$KMDFCOINSTALLERVERSION$.dll,WdfCoInstaller"
+
+[SystemMonitorDriver_Device_CoInstaller_CopyFiles]
+WdfCoInstaller$KMDFCOINSTALLERVERSION$.dll
+
+[SourceDisksFiles]
+WdfCoInstaller$KMDFCOINSTALLERVERSION$.dll=1 ; make sure the number matches with SourceDisksNames
+
+[SystemMonitorDriver_Device.NT.Wdf]
+KmdfService =  SystemMonitorDriver, SystemMonitorDriver_wdfsect
+[SystemMonitorDriver_wdfsect]
+KmdfLibraryVersion = $KMDFVERSION$
+
+[Strings]
+SPSVCINST_ASSOCSERVICE= 0x00000002
+ManufacturerName="<Your manufacturer name>" ;TODO: Replace with your manufacturer name
+ClassName="Samples" ; TODO: edit ClassName
+DiskName = "SystemMonitorDriver Installation Disk"
+SystemMonitorDriver.DeviceDesc = "SystemMonitorDriver Device"
+SystemMonitorDriver.SVCDESC = "SystemMonitorDriver Service"

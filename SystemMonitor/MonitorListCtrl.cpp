@@ -6,7 +6,6 @@
 #include "MonitorListCtrl.h"
 #include "CusMutex.h"
 
-
 // CMonitorListCtrl
 
 IMPLEMENT_DYNAMIC(CMonitorListCtrl, CListCtrl)
@@ -23,6 +22,7 @@ CMonitorListCtrl::~CMonitorListCtrl()
 
 void CMonitorListCtrl::Init()
 {
+	LOG(INFO) << _T("创建列表头，设置表格样式为网格");
 	InsertColumn(0, _T("时间"), LVCFMT_LEFT, 140);
 	InsertColumn(1, _T("进程"), LVCFMT_LEFT, 230);
 	InsertColumn(2, _T("操作"), LVCFMT_LEFT, 100);
@@ -33,29 +33,25 @@ void CMonitorListCtrl::Init()
 	SetExtendedStyle(dwStyle);
 }
 
-void CMonitorListCtrl::InsertRegistryMonitorItem(LPCTSTR wzRegistryTime, LPCTSTR pwzProcessPath, LPCTSTR pwzRegistryPath, LPCTSTR wzRegistryEventClass, LPCTSTR pwzRegistryData)
+void CMonitorListCtrl::InsertRegistryMonitorItem(LPCTSTR wzRegistryTime, LPCTSTR pwzProcessPath, LPCTSTR pwzRegistryPath, LPCTSTR pwzRegistryEventClass, LPCTSTR pwzRegistryData)
 {
 	CCusMutex mutexTemp(_T("InsertUICtrlList"));
 
-	//LockWindowUpdate();
-
 	int nItem = InsertItem(GetItemCount(), wzRegistryTime);
 	SetItemText(nItem, 1, pwzProcessPath);
-	SetItemText(nItem, 2, wzRegistryEventClass);
+	SetItemText(nItem, 2, pwzRegistryEventClass);
 	SetItemText(nItem, 3, pwzRegistryPath);
 	SetItemText(nItem, 4, pwzRegistryData);
 
 	SetItemData(nItem, RegistryItem);
 
-	//UnlockWindowUpdate();
+	LOG(INFO) << pwzProcessPath << " " << pwzRegistryEventClass << " " << pwzRegistryPath << " " << pwzRegistryData;
 }
 
 void CMonitorListCtrl::InsertProcessMonitorItem(LPCTSTR wzProcessTime, LPCTSTR pwzParentProcessPath, LPCTSTR pwzProcessPath, LPCTSTR pwzIsCreateProcess, LPCTSTR pwzCommandLine)
 {
 	CCusMutex mutexTemp(_T("InsertUICtrlList"));
 
-	// LockWindowUpdate();
-	
 	int nItem = InsertItem(GetItemCount(), wzProcessTime);
 	SetItemText(nItem, 1, pwzParentProcessPath);
 	SetItemText(nItem, 2, pwzIsCreateProcess);
@@ -64,7 +60,7 @@ void CMonitorListCtrl::InsertProcessMonitorItem(LPCTSTR wzProcessTime, LPCTSTR p
 
 	SetItemData(nItem, ProcessItem);
 
-	// UnlockWindowUpdate();
+	LOG(INFO) << pwzParentProcessPath << " " << pwzIsCreateProcess << " " << pwzProcessPath << " " << pwzCommandLine;
 }
 
 BEGIN_MESSAGE_MAP(CMonitorListCtrl, CListCtrl)

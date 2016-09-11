@@ -28,7 +28,7 @@ protected:
 private:
 	BOOL						m_bIsRun;
 	HANDLE						m_hDevice;
-	map<wstring, wstring>		m_mapNameMapObj;
+	map<wstring, wstring>		m_mapNameObj;
 	thread						m_Thread;
 	CMonitorListCtrl*			m_MonitorListCtrlObj;
 };

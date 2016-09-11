@@ -36,6 +36,7 @@ BOOL CProcessMonitor::OpenDevice()
 	}
 	else
 	{
+		LOG(ERROR) << _T("Failed to open device \\??\\_ProcessMonitor.");
 		OutputDebugString(_T("Open Device \\??\\_ProcessMonitor Error."));
 	}
 
@@ -130,13 +131,14 @@ void CProcessMonitor::ProcessMonitorThread(CProcessMonitor* pProcessMonitorObj)
 					wchCreateProcessTime,
 					wchParentProcessInfo,
 					wchProcessInfo,
-					pstProcessEvent->bIsCreate ? _T("创建进程") : _T("退出进程"),
+					pstProcessEvent->bIsCreate ? _T("创建进程") : _T("进程退出"),
 					wchCommandLine);
 
 				uBufferSize = 0;
 			}
 			else
 			{
+				LOG(ERROR) << _T("Failed to call DeviceIoControl.");
 				OutputDebugString(_T("Failed to call DeviceIoControl.\r\n"));
 			}
 			HeapFree(GetProcessHeap(), 0, pstProcessEvent);

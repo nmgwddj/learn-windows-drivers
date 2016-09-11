@@ -27,20 +27,13 @@
 #ifndef _AFX_NO_OLE_SUPPORT
 #include <afxdtctl.h>           // MFC 对 Internet Explorer 4 公共控件的支持
 #endif
+
 #ifndef _AFX_NO_AFXCMN_SUPPORT
 #include <afxcmn.h>             // MFC 对 Windows 公共控件的支持
 #endif // _AFX_NO_AFXCMN_SUPPORT
 
 #include <afxcontrolbars.h>     // 功能区和控件条的 MFC 支持
-
-
 #include <afxsock.h>            // MFC 套接字扩展
-
-
-
-
-
-
 
 #ifdef _UNICODE
 #if defined _M_IX86
@@ -52,4 +45,9 @@
 #endif
 #endif
 
-
+// Logs
+#define ELPP_STL_LOGGING
+#define ELPP_THREAD_SAFE
+#define ELPP_UNICODE
+#define ELPP_DEFAULT_LOG_FILE "Logs\\SystemMonitor.log"
+#include <EasyLogging.h>

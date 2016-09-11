@@ -124,8 +124,10 @@ BOOL CSystemMonitorDlg::OnInitDialog()
 
 	// 创建注册表监控对象
 	m_RegistryMonitor  = new CRegistryMonitor(reinterpret_cast<CMonitorListCtrl*>(&m_listCtrl));
+	LOG(INFO) << _T("创建注册表监控对象完毕：") << m_RegistryMonitor;
 	m_RegistryMonitor->Run();
 	m_ProcessMonitor = new CProcessMonitor(reinterpret_cast<CMonitorListCtrl*>(&m_listCtrl));
+	LOG(INFO) << _T("创建进程监控对象完毕：") << m_ProcessMonitor;
 	m_ProcessMonitor->Run();
 
 	/*int nItem = m_listCtrl.InsertItem(0, _T("test data"));

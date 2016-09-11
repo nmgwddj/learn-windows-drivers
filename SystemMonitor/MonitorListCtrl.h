@@ -23,7 +23,7 @@ public:
 		LPCTSTR wzRegistryTime,
 		LPCTSTR pwzProcessPath,
 		LPCTSTR pwzRegistryPath,
-		LPCTSTR wzRegistryEventClass,
+		LPCTSTR pwzRegistryEventClass,
 		LPCTSTR pwzRegistryData);
 
 	void InsertProcessMonitorItem(
